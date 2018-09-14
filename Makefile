@@ -62,6 +62,23 @@ spk-$(1)-$(2): spk/$(1)/Makefile setup
 endef
 $(foreach arch,$(AVAILABLE_ARCHS),$(foreach spk,$(SUPPORTED_SPKS),$(eval $(call SPK_ARCH_template,$(spk),$(arch)))))
 
+####
+# UPSTREAM_GITREMOTE, for example synocommunity/master, if "git remote -v" shows
+#   synocommunity   https://github.com/SynoCommunity/spksrc.git (fetch)
+# Typical Usage:
+#	docker run -it --rm -v $(pwd):/spksrc -w /spksrc synocommunity/spksrc:latest \
+#	make all-affected-spks UPSTREAM_GITREMOTE=synocommunity/master
+#
+# This "@" nonsense is a simple check for zero results
+#
+ifneq ($(UPSTREAM_GITREMOTE),)
+all-affected-spks:
+	for spk in @ $(shell git diff --stat $(UPSTREAM_GITREMOTE)...HEAD | awk -f mk/build-target-determinator.awk) ; \
+	do \
+		case $${spk} in @) ;; *) $(MAKE) -C spk/$${spk} all-supported ;; esac \
+	done
+endif
+
 prepare: downloads
 	@for tc in $(dir $(wildcard toolchains/*/Makefile)) ; \
 	do \
