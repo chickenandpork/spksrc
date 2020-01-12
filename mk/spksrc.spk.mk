@@ -30,8 +30,18 @@ endif
 
 # Check minimum DSM requirements of package
 ifneq ($(REQUIRED_DSM),)
-  ifneq ($(REQUIRED_DSM),$(firstword $(sort $(TCVERSION) $(REQUIRED_DSM))))
-    @$(error Toolchain $(TCVERSION) is lower than required version in Makefile $(REQUIRED_DSM) )
+  ifeq (,$(findstring $(ARCH),$(SRM_ARCHS)))
+    ifneq ($(REQUIRED_DSM),$(firstword $(sort $(TCVERSION) $(REQUIRED_DSM))))
+      @$(error DSM Toolchain $(TCVERSION) is lower than required version in Makefile $(REQUIRED_DSM))
+    endif
+  endif
+endif
+# Check minimum SRM requirements of package
+ifneq ($(REQUIRED_SRM),)
+  ifeq ($(ARCH),$(findstring $(ARCH),$(SRM_ARCHS)))
+    ifneq ($(REQUIRED_SRM),$(firstword $(sort $(TCVERSION) $(REQUIRED_SRM))))
+      @$(error SRM Toolchain $(TCVERSION) is lower than required version in Makefile $(REQUIRED_SRM))
+    endif
   endif
 endif
 
@@ -290,7 +300,7 @@ wizards:
 ifneq ($(strip $(WIZARDS_DIR)),)
 	@$(MSG) "Preparing DSM Wizards"
 	@mkdir -p $(DSM_WIZARDS_DIR)
-	@find $${SPKSRC_WIZARDS_DIR} -maxdepth 1 -type f -and \( -name "install_uifile" -or -name "install_uifile_???" -or -name "install_uifile.sh" -or -name "install_uifile_???.sh" -or -name "upgrade_uifile" -or -name "upgrade_uifile_???" -or -name "upgrade_uifile.sh" -or -name "upgrade_uifile_???.sh" -or -name "upgrade_uninstall" -or -name "uninstall_uifile_???" -or -name "upgrade_uninstall.sh" -or -name "upgrade_uninstall_???.sh" \) -print -exec cp -f {} $(DSM_WIZARDS_DIR) \;
+	@find $${SPKSRC_WIZARDS_DIR} -maxdepth 1 -type f -and \( -name "install_uifile" -or -name "install_uifile_???" -or -name "install_uifile.sh" -or -name "install_uifile_???.sh" -or -name "upgrade_uifile" -or -name "upgrade_uifile_???" -or -name "upgrade_uifile.sh" -or -name "upgrade_uifile_???.sh" -or -name "uninstall_uifile" -or -name "uninstall_uifile_???" -or -name "uninstall_uifile.sh" -or -name "uninstall_uifile_???.sh" \) -print -exec cp -f {} $(DSM_WIZARDS_DIR) \;
 	@find $(DSM_WIZARDS_DIR) -maxdepth 1 -type f -not -name "*.sh" -print -exec chmod 0644 {} \;
 	@find $(DSM_WIZARDS_DIR) -maxdepth 1 -type f -name "*.sh" -print -exec chmod 0755 {} \;
 	$(eval SPK_CONTENT += WIZARD_UIFILES)
